@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html class="dark" lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Campus Helper</title>
+
+<script src="https://cdn.tailwindcss.com?plugins=forms"></script>
+
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;600;700&family=Inter:wght@300;400;500&display=swap" rel="stylesheet"/>
+
+<style>
+body { background-color: #0b1324; }
+.neon-glow {
+    text-shadow: 0 0 10px rgba(177,197,255,0.5), 0 0 20px rgba(177,197,255,0.3);
+}
+</style>
+</head>
+
+<body class="text-white min-h-screen flex items-center justify-center">
+
+<div class="w-full max-w-md bg-[#131b2c]/80 backdrop-blur-xl p-10 rounded-xl border border-gray-700">
+
+<h1 class="text-4xl text-center neon-glow mb-8 font-bold tracking-widest">LOGIN</h1>
+
+<div class="flex mb-6">
+    <button onclick="showLogin()" class="w-1/2 py-2 bg-blue-600">Login</button>
+    <button onclick="showSignup()" class="w-1/2 py-2 bg-gray-700">Signup</button>
+</div>
+
+<form id="loginForm" class="space-y-6">
+    <input id="loginId" placeholder="Identity ID"
+        class="w-full p-3 bg-black/40 border border-gray-600 rounded"/>
+
+    <input id="loginPass" type="password" placeholder="Passcode"
+        class="w-full p-3 bg-black/40 border border-gray-600 rounded"/>
+
+    <button id="loginBtn" type="submit"
+        class="w-full bg-gradient-to-r from-blue-500 to-blue-300 py-3 rounded font-bold tracking-widest">
+        ACCESS SYSTEM
+    </button>
+</form>
+
+<form id="signupForm" class="space-y-6 hidden">
+    <input id="signupId" placeholder="Identity ID"
+        class="w-full p-3 bg-black/40 border border-gray-600 rounded"/>
+
+    <input id="signupPass" type="password" placeholder="Passcode"
+        class="w-full p-3 bg-black/40 border border-gray-600 rounded"/>
+
+    <button type="submit" class="w-full bg-green-500 py-3 rounded font-bold">
+        CREATE ACCOUNT
+    </button>
+</form>
+
+
+
+<p id="statusMsg" class="text-center mt-4 text-sm text-gray-400"></p>
+
+<div id="locationText" class="text-center mt-4 text-xs text-gray-500">
+    Detecting location...
+</div>
+
+</div>
+
+<script>
+
+// 🌐 BASE URL
+const BASE_URL = "https://campus-navigator-vtx6.onrender.com";
+
+// 📌 ELEMENTS
+const loginForm = document.getElementById("loginForm");
+const signupForm = document.getElementById("signupForm");
+
+const loginId = document.getElementById("loginId");
+const loginPass = document.getElementById("loginPass");
+const loginBtn = document.getElementById("loginBtn");
+
+const signupId = document.getElementById("signupId");
+const signupPass = document.getElementById("signupPass");
+
+const statusMsg = document.getElementById("statusMsg");
+const locationText = document.getElementById("locationText");
+
+// 🌌 TOGGLE
+function showLogin(){
+    loginForm.classList.remove("hidden");
+    signupForm.classList.add("hidden");
+}
+
+function showSignup(){
+    signupForm.classList.remove("hidden");
+    loginForm.classList.add("hidden");
+}
+
+// 🌍 LOCATION
+navigator.geolocation.getCurrentPosition(
+    pos=>{
+        locationText.innerText =
+        `Lat: ${pos.coords.latitude.toFixed(4)} | Long: ${pos.coords.longitude.toFixed(4)}`;
+    },
+    ()=> locationText.innerText="Location denied"
+);
+
+// 🔐 LOGIN
+loginForm.addEventListener("submit", async e=>{
+    e.preventDefault();
+
+    const userId = loginId.value.trim();
+    const password = loginPass.value.trim();
+
+    if(!userId || !password){
+        statusMsg.innerText="⚠️ Fill all fields";
+        return;
+    }
+
+    loginBtn.innerText="Accessing...";
+    loginBtn.disabled=true;
+
+    try{
+        const res = await fetch(BASE_URL + "/login",{
+            method:"POST",
+            headers:{"Content-Type":"application/json"},
+            body:JSON.stringify({userId,password})
+        });
+
+        if(!res.ok) throw new Error();
+
+        const data = await res.json();
+
+        if(data.success && data.user){
+
+            localStorage.setItem("user", JSON.stringify(data.user));
+
+            statusMsg.innerText="✅ Access Granted";
+
+            setTimeout(()=>{
+                if(data.user.role === "admin"){
+                    window.location.href="admin.html";
+                } else {
+                    window.location.href="dashboard.html";
+                }
+            },800);
+
+        } else {
+            statusMsg.innerText="❌ Invalid Credentials";
+        }
+
+    } catch(err){
+        statusMsg.innerText="🚨 Server Error";
+    }
+
+    loginBtn.innerText="ACCESS SYSTEM";
+    loginBtn.disabled=false;
+});
+
+// 🧾 SIGNUP
+signupForm.addEventListener("submit", async e=>{
+    e.preventDefault();
+
+    const userId = signupId.value.trim();
+    const password = signupPass.value.trim();
+
+    if(!userId || !password){
+        statusMsg.innerText="⚠️ Fill all fields";
+        return;
+    }
+
+    try{
+        const res = await fetch(BASE_URL + "/signup",{
+            method:"POST",
+            headers:{"Content-Type":"application/json"},
+            body:JSON.stringify({userId,password})
+        });
+
+        if(!res.ok) throw new Error();
+
+        const data = await res.json();
+
+        if(data.success){
+            statusMsg.innerText="✅ Account Created";
+            showLogin();
+        } else {
+            statusMsg.innerText=data.message || "Error";
+        }
+
+    } catch(err){
+        statusMsg.innerText="🚨 Server Error";
+    }
+});
+
+// 👑 ADMIN REQUEST
+async function requestAdmin(){
+    const userId = prompt("Enter your User ID");
+    const password = prompt("Enter your Password");
+
+    if(!userId || !password){
+        statusMsg.innerText="⚠️ Cancelled";
+        return;
+    }
+
+    try{
+        const res = await fetch(BASE_URL + "/requestAdmin",{
+            method:"POST",
+            headers:{"Content-Type":"application/json"},
+            body:JSON.stringify({userId,password})
+        });
+
+        if(!res.ok) throw new Error();
+
+        const data = await res.json();
+        statusMsg.innerText = data.message;
+
+    } catch(err){
+        statusMsg.innerText="🚨 Server Error";
+    }
+}
+
+</script>
+
+</body>
+</html>

@@ -1,0 +1,38 @@
+{
+  "users": [
+    {
+      "username": "admin",
+      "password": "1234",
+      "role": "admin"
+    },
+    {
+      "username": "Ash",
+      "password": "1234",
+      "role": "user"
+    }
+  ],
+  "guide": [
+    {
+      "name": "Library",
+      "location": "Block B"
+    }
+  ],
+  "notifications": [
+    {
+      "text": "Welcome",
+      "date": "2026-03-01"
+    }
+  ],
+  "teachers": [
+    {
+      "name": "Dr Sharma",
+      "dept": "CSE"
+    }
+  ],
+  "forum": [
+    {
+      "msg": "hii",
+      "user": "Ash"
+    }
+  ]
+}

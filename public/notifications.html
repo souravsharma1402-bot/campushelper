@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Notifications</title>
+<script src="https://cdn.tailwindcss.com"></script>
+</head>
+
+<body class="bg-[#0b1324] text-white">
+
+<script>
+// 🔐 AUTH
+const user = JSON.parse(localStorage.getItem("user"));
+if(!user) window.location.href="index.html";
+
+// 🌐 BASE URL
+const BASE_URL = "https://campus-navigator-vtx6.onrender.com";
+</script>
+
+<div class="p-6 max-w-3xl mx-auto">
+
+<h1 class="text-3xl mb-6 font-bold text-blue-300">Notifications</h1>
+
+<div id="list" class="space-y-4"></div>
+
+<div id="form" class="mt-6"></div>
+
+</div>
+
+<script>
+
+let data = [];
+
+// 🧪 FAKE DATA (fallback)
+const fakeNotifications = [
+  {
+    text: "📢 Mid Semester Exams start from 15 April",
+    date: "2026-04-07"
+  },
+  {
+    text: "⚠️ Fee submission deadline extended till 12 April",
+    date: "2026-04-06"
+  },
+  {
+    text: "🎉 Annual Fest registrations are now open",
+    date: "2026-04-05"
+  },
+  {
+    text: "📚 Library will remain open 24x7 during exams",
+    date: "2026-04-04"
+  },
+  {
+    text: "🚧 Block C1 under maintenance this weekend",
+    date: "2026-04-03"
+  }
+];
+
+// 🔄 LOAD
+async function load(){
+  try{
+    const res = await fetch(BASE_URL + "/notifications");
+    data = await res.json();
+
+    // 👉 if empty, use fake
+    if(!data || data.length === 0){
+      data = fakeNotifications;
+    }
+
+  } catch(e){
+    console.log("Server down, using fake data 😎");
+    data = fakeNotifications;
+  }
+
+  // newest first
+  data.sort((a,b)=> new Date(b.date) - new Date(a.date));
+
+  render(data);
+
+  // 👑 ADMIN ONLY
+  if(user.role === "admin"){
+    document.getElementById("form").innerHTML = `
+      <div class="flex gap-2 mt-6">
+        <input id="t" class="p-2 bg-gray-800 border border-gray-600 rounded w-full"
+        placeholder="Write notification...">
+        <button onclick="add()" class="bg-blue-500 px-4 py-2 rounded">
+        Add
+        </button>
+      </div>
+    `;
+  }
+}
+
+// 📋 RENDER
+function render(arr){
+  const list = document.getElementById("list");
+
+  list.innerHTML = arr.length
+  ? arr.map(x => `
+    <div class="bg-gray-800 p-4 rounded-lg shadow hover:scale-[1.01] transition">
+      <div class="flex justify-between items-center">
+        <b class="text-lg">${x.text}</b>
+        <span class="text-xs text-gray-400">${x.date}</span>
+      </div>
+    </div>
+  `).join('')
+  : `<p class="text-gray-400">No notifications yet</p>`;
+}
+
+// ➕ ADD
+async function add(){
+  const text = document.getElementById("t").value.trim();
+  if(!text) return;
+
+  await fetch(BASE_URL + "/notifications",{
+    method:'POST',
+    headers:{
+      'Content-Type':'application/json'
+    },
+    body:JSON.stringify({
+      text,
+      date:new Date().toISOString().split('T')[0]
+    })
+  });
+
+  document.getElementById("t").value = "";
+  load();
+}
+
+// 🚀 INITIAL LOAD
+load();
+
+</script>
+
+</body>
+</html>

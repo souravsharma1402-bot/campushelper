@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Campus Helper Forum</title>
+<script src="https://cdn.tailwindcss.com"></script>
+</head>
+
+<body class="bg-[#0b1324] text-white">
+
+<script>
+// 🔐 AUTH
+const user = JSON.parse(localStorage.getItem("user"));
+if(!user) window.location.href = "index.html";
+
+// 🌐 BASE URL
+const BASE_URL = "https://campus-navigator-vtx6.onrender.com";
+
+// 🔁 CONTROL FLAG
+let isUpdating = false;
+</script>
+
+<!-- NAV -->
+<div class="p-4 flex gap-6 bg-black">
+<a href="/dashboard.html">Dashboard</a>
+<a href="/guide.html">Guide</a>
+<a href="/teachers.html">Teachers</a>
+<a href="/forum.html" class="text-blue-400">Forum</a>
+</div>
+
+<!-- CREATE POST -->
+<div class="p-6">
+<textarea id="postText" class="w-full p-3 bg-gray-800 rounded" placeholder="Write something..."></textarea>
+
+<input type="file" id="imageInput" class="mt-3">
+
+<button onclick="createPost()" class="mt-3 bg-blue-500 px-4 py-2 rounded">
+Post
+</button>
+</div>
+
+<!-- POSTS -->
+<div id="posts" class="p-6 space-y-6"></div>
+
+<script>
+
+// 📝 CREATE POST
+async function createPost(){
+    const text = document.getElementById("postText").value.trim();
+    const file = document.getElementById("imageInput").files[0];
+
+    if(!text && !file){
+        alert("Write something or add image");
+        return;
+    }
+
+    let image = "";
+
+    if(file){
+        const reader = new FileReader();
+        reader.onload = async ()=>{
+            image = reader.result;
+            await sendPost(text,image);
+        };
+        reader.readAsDataURL(file);
+    } else {
+        await sendPost(text,"");
+    }
+}
+
+// 📤 SEND POST
+async function sendPost(text,image){
+    isUpdating = true;
+
+    try{
+        await fetch(BASE_URL + "/createPost",{
+            method:"POST",
+            headers:{"Content-Type":"application/json"},
+            body:JSON.stringify({
+                userId:user.userId,
+                text,
+                image
+            })
+        });
+
+        document.getElementById("postText").value = "";
+        document.getElementById("imageInput").value = "";
+
+        await loadPosts();
+
+    } catch(err){
+        console.error("Post failed", err);
+    }
+
+    isUpdating = false;
+}
+
+// 📥 LOAD POSTS
+async function loadPosts(){
+    try{
+        const res = await fetch(BASE_URL + "/getPosts");
+        const data = await res.json();
+
+        const container = document.getElementById("posts");
+        container.innerHTML = "";
+
+        data.forEach(p=>{
+            container.innerHTML += `
+            <div class="bg-gray-800 p-4 rounded">
+                <h3 class="font-bold">${p.userId}</h3>
+                <p>${p.text}</p>
+
+                ${p.image ? `<img src="${p.image}" class="mt-2 rounded max-h-60">` : ""}
+
+                <div class="flex gap-4 mt-3">
+                    <button onclick="likePost(${p.id})">❤️ ${p.likes}</button>
+                </div>
+
+                <div class="mt-3 flex gap-2">
+                    <input id="c${p.id}" placeholder="comment..." class="p-2 bg-gray-700 rounded w-full">
+                    <button onclick="commentPost(${p.id})" class="bg-blue-500 px-3 rounded">Send</button>
+                </div>
+
+                <div class="mt-2 space-y-1">
+                    ${p.comments.map(c=>`
+                        <p><b>${c.userId}:</b> ${c.comment}</p>
+                    `).join("")}
+                </div>
+            </div>
+            `;
+        });
+
+    } catch(err){
+        console.error("Load failed", err);
+    }
+}
+
+// ❤️ LIKE
+async function likePost(id){
+    isUpdating = true;
+
+    try{
+        await fetch(BASE_URL + "/likePost",{
+            method:"POST",
+            headers:{"Content-Type":"application/json"},
+            body:JSON.stringify({id})
+        });
+
+        await loadPosts();
+
+    } catch(err){
+        console.error("Like failed", err);
+    }
+
+    isUpdating = false;
+}
+
+// 💬 COMMENT (FIXED)
+async function commentPost(id){
+    const input = document.getElementById("c"+id);
+    const comment = input.value.trim();
+
+    if(!comment) return;
+
+    isUpdating = true;
+
+    try{
+        const res = await fetch(BASE_URL + "/commentPost",{
+            method:"POST",
+            headers:{"Content-Type":"application/json"},
+            body:JSON.stringify({
+                id, // change to postId if backend needs
+                userId:user.userId,
+                comment
+            })
+        });
+
+        const data = await res.json();
+        console.log("Comment response:", data);
+
+        input.value = "";
+
+        await loadPosts();
+
+    } catch(err){
+        console.error("Comment failed", err);
+    }
+
+    isUpdating = false;
+}
+
+// 🔁 AUTO REFRESH (SAFE)
+setInterval(()=>{
+    if(!isUpdating){
+        loadPosts();
+    }
+},3000);
+
+// 🚀 INITIAL LOAD
+loadPosts();
+
+</script>
+
+</body>
+</html>

@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Notifications</title>
+<script src="https://cdn.tailwindcss.com"></script>
+</head>
+
+<body class="bg-[#0b1324] text-white">
+
+<script>
+// 🔐 AUTH
+const user = JSON.parse(localStorage.getItem("user"));
+if(!user) window.location.href="index.html";
+
+// 🌐 BASE URL
+const BASE_URL = "https://campus-navigator-vtx6.onrender.com";
+</script>
+
+<div class="p-6">
+
+<h1 class="text-2xl mb-6">Notifications</h1>
+
+<div id="list" class="space-y-4"></div>
+
+<div id="form" class="mt-6"></div>
+
+</div>
+
+<script>
+
+let data = [];
+
+// 🔄 LOAD
+async function load(){
+  const res = await fetch(BASE_URL + "/notifications");
+  data = await res.json();
+
+  // newest first
+  data.sort((a,b)=> new Date(b.date) - new Date(a.date));
+
+  render(data);
+
+  // 👑 ADMIN ONLY
+  if(user.role === "admin"){
+    document.getElementById("form").innerHTML = `
+      <input id="t" class="p-2 bg-gray-800 rounded" placeholder="Message">
+      <button onclick="add()" class="bg-blue-500 px-3 py-1 ml-2 rounded">Add</button>
+    `;
+  }
+}
+
+// 📋 RENDER
+function render(arr){
+  const list = document.getElementById("list");
+
+  list.innerHTML = arr.length
+  ? arr.map(x => `
+    <div class="bg-gray-800 p-3 rounded">
+      <b>${x.text}</b><br>
+      <small class="text-gray-400">${x.date}</small>
+    </div>
+  `).join('')
+  : "No notifications yet";
+}
+
+// ➕ ADD
+async function add(){
+  const text = document.getElementById("t").value;
+
+  await fetch(BASE_URL + "/notifications",{
+    method:'POST',
+    headers:{
+      'Content-Type':'application/json'
+    },
+    body:JSON.stringify({
+      text,
+      date:new Date().toISOString().split('T')[0]
+    })
+  });
+
+  load();
+}
+
+// 🚀 INITIAL LOAD
+load();
+
+</script>
+
+</body>
+</html>

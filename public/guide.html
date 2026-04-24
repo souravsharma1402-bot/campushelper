@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html class="dark" lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+
+<title>Campus Helper Guide</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;600;700&family=Inter:wght@300;400;500&display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com"></script>
+
+<style>
+body { font-family: 'Inter', sans-serif; background:#0b1324; }
+.font-headline { font-family: 'Space Grotesk'; }
+.glass-panel { background: rgba(19,27,44,0.6); backdrop-filter: blur(20px); }
+</style>
+</head>
+
+<body class="text-white min-h-screen">
+
+<!-- 🔐 AUTH -->
+<script>
+const user = JSON.parse(localStorage.getItem("user"));
+if(!user){ window.location.href="index.html"; }
+</script>
+
+<!-- TOP BAR -->
+<header class="fixed top-0 w-full flex justify-between items-center px-8 h-16 bg-[#0b1324]/80 backdrop-blur-xl">
+    <div class="text-xl font-bold text-blue-300">CampusNavigator</div>
+
+    <div class="flex items-center gap-4">
+        <span id="topUser" class="text-sm text-gray-300"></span>
+        <button onclick="logout()" class="bg-red-500 px-3 py-1 rounded">Logout</button>
+    </div>
+</header>
+
+<!-- SIDEBAR -->
+<aside class="fixed left-0 top-16 bottom-0 w-64 bg-[#060e1e] p-6 hidden md:flex flex-col">
+
+    <h2 class="text-blue-300 font-bold mb-6">Navigator</h2>
+
+    <a href="dashboard.html" class="mb-2 text-blue-300">Dashboard</a>
+    <a href="guide.html" class="mb-2 text-white">Guide</a>
+    <a href="forum.html" class="mb-2 text-gray-400">Forum</a>
+    <a href="teachers.html" class="mb-2 text-gray-400">Teachers</a>
+    <a href="notifications.html" class="mb-2 text-gray-400">Notifications</a>
+
+    <div class="mt-auto">
+        <p id="guideUserName"></p>
+        <p id="guideUserId" class="text-gray-500 text-sm"></p>
+    </div>
+
+</aside>
+
+<!-- MAIN -->
+<main class="pt-24 md:pl-72 px-6">
+
+<h1 class="text-4xl font-bold mb-10">Campus Guide</h1>
+
+<div class="grid md:grid-cols-3 gap-6">
+
+<!-- ACCOUNTS -->
+<div class="glass-panel p-6 rounded">
+    <h3 class="text-xl mb-2 text-blue-300">Accounts Office</h3>
+    <p class="text-gray-400 mb-2">Block B3</p>
+    <p class="text-sm text-gray-500">
+        Fee submission, refunds, challans, financial queries.
+    </p>
+</div>
+
+<!-- FR -->
+<div class="glass-panel p-6 rounded">
+    <h3 class="text-xl mb-2 text-blue-300">FOOD REPUBLIC</h3>
+    <p class="text-gray-400 mb-2">Block C1</p>
+    <p class="text-sm text-gray-500">
+        Food Court
+    </p>
+</div>
+
+<!-- LIBRARY -->
+<div class="glass-panel p-6 rounded">
+    <h3 class="text-xl mb-2 text-blue-300">Central Library</h3>
+    <p class="text-gray-400 mb-2">Block A2</p>
+    <p class="text-sm text-gray-500">
+        Books, study halls, digital resources, quiet zones.
+    </p>
+</div>
+
+<!-- ADMIN -->
+<div class="glass-panel p-6 rounded">
+    <h3 class="text-xl mb-2 text-blue-300">Admin Office</h3>
+    <p class="text-gray-400 mb-2">Block B1</p>
+    <p class="text-sm text-gray-500">
+        General administration, approvals, official requests.
+    </p>
+</div>
+
+<!-- HOSTEL -->
+<div class="glass-panel p-6 rounded">
+    <h3 class="text-xl mb-2 text-blue-300">Hostel Office</h3>
+    <p class="text-gray-400 mb-2">Near Hostel Gate</p>
+    <p class="text-sm text-gray-500">
+        Room allocation, complaints, hostel services.
+    </p>
+</div>
+
+<!-- MEDICAL -->
+<div class="glass-panel p-6 rounded">
+    <h3 class="text-xl mb-2 text-blue-300">Medical Center</h3>
+    <p class="text-gray-400 mb-2">Block DD1</p>
+    <p class="text-sm text-gray-500">
+        First aid, doctor consultation, emergency care.
+    </p>
+</div>
+
+</div>
+
+</main>
+
+<script>
+
+// 👤 USER DATA
+document.getElementById("guideUserName").innerText = user.userId;
+document.getElementById("guideUserId").innerText = "ID: " + user.userId;
+document.getElementById("topUser").innerText = user.userId;
+
+// 🚪 LOGOUT
+function logout(){
+    localStorage.removeItem("user");
+    window.location.href="index.html";
+}
+
+</script>
+
+</body>
+</html>
